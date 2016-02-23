@@ -1,7 +1,6 @@
 module VegitoSpec (main, spec) where
 
 import Test.Hspec
-import Test.QuickCheck
 
 import Vegito
 import Data.Functor.Identity
@@ -16,4 +15,4 @@ spec = do
   describe "sanity" $ do
     it "map and sum" $
       runIdentity (sumV $ mapV (+ 1) $ mapV (* 2) $ enumFromToV 1 9001)
-        `shouldBe` sum (map (+ 1) $ map (* 2) [1..9001])
+        `shouldBe` sum (map (+ 1) $ map (* 2) [1..9001 :: Int])
