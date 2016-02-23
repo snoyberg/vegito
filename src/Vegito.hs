@@ -40,16 +40,21 @@ enumFromToV low high =
     Source go low
   where
     go x
-        | x > high = pure (Done ())
-        | otherwise = pure (Yield (x + 1) x)
+        | x <= high = pure (Yield (x + 1) x)
+        | otherwise = pure (Done ())
 {-# INLINE enumFromToV #-}
 
 sumV :: (Num i, Monad m) => Source i m () -> m i
 sumV (Source f sorig) =
-    let loop !total (Done ()) = pure total
-        loop !total (Skip s) = f s >>= loop total
-        loop !total (Yield s i) = f s >>= loop (total + i)
-     in f sorig >>= loop 0
+    let loop !total s = do
+            step <- f s
+            case step of
+                Done () -> pure total
+                Skip s' -> loop total s'
+                Yield s' i ->
+                    let total' = total + i
+                     in total' `seq` loop total' s'
+     in loop 0 sorig
 {-# INLINE sumV #-}
 
 mapV :: Functor m => (i -> o) -> Source i m r -> Source o m r
