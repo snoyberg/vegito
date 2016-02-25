@@ -37,6 +37,26 @@ instance Applicative m => Applicative (Source o m) where
 
 data ApplicativeHelper x y r = First x y | Second r y
 
+instance Applicative m => Monad (Source o m) where
+    return = pure
+    (>>) = (*>)
+    Source f1 s1orig >>= right =
+        Source go (Left s1orig)
+      where
+        go (Left s1) =
+            fmap goStep (f1 s1)
+          where
+            goStep (Yield s1' o) = Yield (Left s1') o
+            goStep (Skip s1') = Skip (Left s1')
+            goStep (Done r) = Skip (Right (right r))
+
+        go (Right (Source f2 s2)) =
+            fmap goStep (f2 s2)
+          where
+            goStep (Yield s2' o) = Yield (Right (Source f2 s2')) o
+            goStep (Skip s2') = Skip (Right (Source f2 s2'))
+            goStep (Done r) = Done r
+
 instance (Applicative m, Monoid r) => Monoid (Source o m r) where
     mempty = pure mempty
     mappend = liftA2 mappend
