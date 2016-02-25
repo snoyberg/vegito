@@ -1,17 +1,24 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveFunctor #-}
 module Vegito where
+
+import Control.Applicative (liftA2)
+
+data Step s o r where
+    Yield :: s -> o -> Step s o r
+    Skip :: s -> Step s o r
+    Done :: r -> Step s o r
+  deriving Functor
 
 data Source o m r where
     Source :: (s -> m (Step s o r)) -> s -> Source o m r
-instance (Applicative m, Monoid r) => Monoid (Source o m r) where
-    mempty =
-        Source f ()
-      where
-        f () = pure (Done mempty)
-
-    mappend (Source f1 s1orig) (Source f2 s2orig) =
+instance Functor m => Functor (Source o m) where
+    fmap f (Source step s) = Source (fmap (fmap f) . step) s
+instance Applicative m => Applicative (Source o m) where
+    pure r = Source (\() -> pure (Done r)) ()
+    Source f1 s1orig <*> Source f2 s2orig =
         Source go (First s1orig s2orig)
       where
         go (First s1 s2) =
@@ -26,14 +33,13 @@ instance (Applicative m, Monoid r) => Monoid (Source o m r) where
           where
             goStep (Yield s2' o) = Yield (Second r1 s2') o
             goStep (Skip s2') = Skip (Second r1 s2')
-            goStep (Done r2) = Done (mappend r1 r2)
+            goStep (Done r2) = Done (r1 r2)
 
-data MappendHelper x y r = First x y | Second r y
+data ApplicativeHelper x y r = First x y | Second r y
 
-data Step s o r where
-    Yield :: s -> o -> Step s o r
-    Skip :: s -> Step s o r
-    Done :: r -> Step s o r
+instance (Applicative m, Monoid r) => Monoid (Source o m r) where
+    mempty = pure mempty
+    mappend = liftA2 mappend
 
 enumFromToV :: (Ord o, Applicative m, Num o) => o -> o -> Source o m ()
 enumFromToV low high =
