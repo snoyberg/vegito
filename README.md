@@ -1,5 +1,7 @@
 ## vegito
 
+[![Build Status](https://travis-ci.org/snoyberg/vegito.svg?branch=master)](https://travis-ci.org/snoyberg/vegito)
+
 Some standalone stream fusion experiments.
 
 This library is built around testing a thought experiment: stream fusion is
