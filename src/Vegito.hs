@@ -70,7 +70,7 @@ enumFromToV low high =
         | otherwise = pure (Done ())
 {-# INLINE enumFromToV #-}
 
-foldlV :: (Num i, Monad m) => (r -> i -> r) -> r -> Source i m () -> m r
+foldlV :: (Monad m) => (r -> i -> r) -> r -> Source i m () -> m r
 foldlV g accum0 (Source f sorig) =
     let loop accum s = do
             step <- f s

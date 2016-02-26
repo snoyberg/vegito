@@ -14,6 +14,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Vegito
+                       Gotenks
   build-depends:       base >= 4.8 && < 5
   default-language:    Haskell2010
 
@@ -21,6 +22,8 @@ test-suite vegito-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
+  other-modules:       VegitoSpec
+                       GotenksSpec
   build-depends:       base
                      , vegito
                      , hspec

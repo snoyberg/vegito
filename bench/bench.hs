@@ -4,6 +4,7 @@ import qualified Conduit as C
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector as VB
 import Vegito
+import Gotenks
 import Data.Functor.Identity
 
 main :: IO ()
@@ -15,6 +16,12 @@ main = defaultMain
                 $ mapV (+ 1)
                 $ mapV (* 2)
                 $ enumFromToV 1 x
+        , bench' "gotenks" $ \x ->
+                  runIdentity
+                $ toSink sumG
+                $ toTransform (mapG (+ 1))
+                $ toTransform (mapG (* 2))
+                $ toSource (enumFromToG 1 x)
         , bench' "conduit-combinators" $ \x ->
                   runIdentity
                 $ C.enumFromToC 1 x
