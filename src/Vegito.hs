@@ -12,14 +12,14 @@ data Step s o r where
     Done :: r -> Step s o r
   deriving Functor
 
-data Source o m r where
-    Source :: (s -> m (Step s o r)) -> s -> Source o m r
-instance Functor m => Functor (Source o m) where
-    fmap f (Source step s) = Source (fmap (fmap f) . step) s
-instance Applicative m => Applicative (Source o m) where
-    pure r = Source (\() -> pure (Done r)) ()
-    Source f1 s1orig <*> Source f2 s2orig =
-        Source go (First s1orig s2orig)
+data Stream o m r where
+    Stream :: (s -> m (Step s o r)) -> s -> Stream o m r
+instance Functor m => Functor (Stream o m) where
+    fmap f (Stream step s) = Stream (fmap (fmap f) . step) s
+instance Applicative m => Applicative (Stream o m) where
+    pure r = Stream (\() -> pure (Done r)) ()
+    Stream f1 s1orig <*> Stream f2 s2orig =
+        Stream go (First s1orig s2orig)
       where
         go (First s1 s2) =
             fmap goStep (f1 s1)
@@ -37,11 +37,11 @@ instance Applicative m => Applicative (Source o m) where
 
 data ApplicativeHelper x y r = First x y | Second r y
 
-instance Applicative m => Monad (Source o m) where
+instance Applicative m => Monad (Stream o m) where
     return = pure
     (>>) = (*>)
-    Source f1 s1orig >>= right =
-        Source go (Left s1orig)
+    Stream f1 s1orig >>= right =
+        Stream go (Left s1orig)
       where
         go (Left s1) =
             fmap goStep (f1 s1)
@@ -50,28 +50,28 @@ instance Applicative m => Monad (Source o m) where
             goStep (Skip s1') = Skip (Left s1')
             goStep (Done r) = Skip (Right (right r))
 
-        go (Right (Source f2 s2)) =
+        go (Right (Stream f2 s2)) =
             fmap goStep (f2 s2)
           where
-            goStep (Yield s2' o) = Yield (Right (Source f2 s2')) o
-            goStep (Skip s2') = Skip (Right (Source f2 s2'))
+            goStep (Yield s2' o) = Yield (Right (Stream f2 s2')) o
+            goStep (Skip s2') = Skip (Right (Stream f2 s2'))
             goStep (Done r) = Done r
 
-instance (Applicative m, Monoid r) => Monoid (Source o m r) where
+instance (Applicative m, Monoid r) => Monoid (Stream o m r) where
     mempty = pure mempty
     mappend = liftA2 mappend
 
-enumFromToV :: (Ord o, Applicative m, Num o) => o -> o -> Source o m ()
+enumFromToV :: (Ord o, Applicative m, Num o) => o -> o -> Stream o m ()
 enumFromToV low high =
-    Source go low
+    Stream go low
   where
     go x
         | x <= high = pure (Yield (x + 1) x)
         | otherwise = pure (Done ())
 {-# INLINE enumFromToV #-}
 
-foldlV :: (Monad m) => (r -> i -> r) -> r -> Source i m () -> m r
-foldlV g accum0 (Source f sorig) =
+foldlV :: (Monad m) => (r -> i -> r) -> r -> Stream i m () -> m r
+foldlV g accum0 (Stream f sorig) =
     let loop accum s = do
             step <- f s
             case step of
@@ -83,17 +83,17 @@ foldlV g accum0 (Source f sorig) =
      in loop accum0 sorig
 {-# INLINE foldlV #-}
 
-sumV :: (Num i, Monad m) => Source i m () -> m i
+sumV :: (Num i, Monad m) => Stream i m () -> m i
 sumV = foldlV (+) 0
 {-# INLINE sumV #-}
 
-mapV :: Functor m => (i -> o) -> Source i m r -> Source o m r
-mapV f (Source src sorig) =
+mapV :: Functor m => (i -> o) -> Stream i m r -> Stream o m r
+mapV f (Stream src sorig) =
     let go s = fmap goStep (src s)
 
         goStep (Yield s i) = Yield s (f i)
         goStep (Skip s) = Skip s
         goStep (Done r) = Done r
 
-     in Source go sorig
+     in Stream go sorig
 {-# INLINE mapV #-}

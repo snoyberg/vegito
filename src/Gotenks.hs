@@ -54,9 +54,9 @@ runGotenks (Gotenks orig) =
     loop (DoneF r) = pure r
     loop (LeftoverF () f) = loop f
 
-toSource :: Applicative m => Gotenks () o m r -> Source o m r
+toSource :: Applicative m => Gotenks () o m r -> Stream o m r
 toSource (Gotenks orig) =
-    Source go (orig DoneF)
+    Stream go (orig DoneF)
   where
     go (YieldF o f) = pure (Yield f o)
     go (AwaitF _ f) = pure (Skip f)
@@ -65,8 +65,8 @@ toSource (Gotenks orig) =
     go (LeftoverF () r) = pure (Skip r)
 {-# INLINE [0] toSource #-}
 
-toSink :: Monad m => Gotenks i Void m r -> Source i m () -> m r
-toSink (Gotenks forig) (Source step sorig) =
+toSink :: Monad m => Gotenks i Void m r -> Stream i m () -> m r
+toSink (Gotenks forig) (Stream step sorig) =
     let loop _ (DoneF r) _ = pure r
         loop _ (YieldF o _) _ = absurd o
         loop is (LeftoverF i f) s = loop (i:is) f s
@@ -88,9 +88,9 @@ toSink (Gotenks forig) (Source step sorig) =
      in loop [] (forig DoneF) sorig
 {-# INLINE [0] toSink #-}
 
-toTransform :: Applicative m => Gotenks i o m r -> Source i m () -> Source o m r
-toTransform (Gotenks forig) (Source step sorig) =
-    Source go ([], Just sorig, forig DoneF)
+toTransform :: Applicative m => Gotenks i o m r -> Stream i m () -> Stream o m r
+toTransform (Gotenks forig) (Stream step sorig) =
+    Stream go ([], Just sorig, forig DoneF)
   where
     go (_, _, DoneF r) = pure (Done r)
     go (is, s, YieldF o f) = pure (Yield (is, s, f) o)
