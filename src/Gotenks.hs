@@ -115,7 +115,7 @@ enumFromToG low high =
         | otherwise = pure ()
 {-# INLINE [0] enumFromToG #-}
 {-# RULES "toSource enumFromToG"
-    forall x y. toSource (enumFromToG x y) = enumFromToV x y
+    forall x y. toSource (enumFromToG x y) = enumFromToS x y
   #-}
 
 mapG :: (i -> o) -> Gotenks i o m ()
@@ -129,7 +129,7 @@ mapG f =
             Just i -> yield (f i) *> loop
 {-# INLINE [0] mapG #-}
 {-# RULES "toTransform mapG"
-    forall f. toTransform (mapG f) = mapV f
+    forall f. toTransform (mapG f) = mapS f
   #-}
 
 foldlG :: (r -> i -> r) -> r -> Gotenks i o m r
@@ -145,7 +145,7 @@ foldlG f accum0 =
                  in accum' `seq` loop accum'
 {-# INLINE [0] foldlG #-}
 {-# RULES "toSink foldlG"
-    forall f accum. toSink (foldlG f accum) = foldlV f accum
+    forall f accum. toSink (foldlG f accum) = foldlS f accum
   #-}
 
 sumG :: Num i => Gotenks i o m i

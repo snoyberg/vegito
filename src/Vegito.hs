@@ -61,17 +61,17 @@ instance (Applicative m, Monoid r) => Monoid (Stream o m r) where
     mempty = pure mempty
     mappend = liftA2 mappend
 
-enumFromToV :: (Ord o, Applicative m, Num o) => o -> o -> Stream o m ()
-enumFromToV low high =
+enumFromToS :: (Ord o, Applicative m, Num o) => o -> o -> Stream o m ()
+enumFromToS low high =
     Stream go low
   where
     go x
         | x <= high = pure (Yield (x + 1) x)
         | otherwise = pure (Done ())
-{-# INLINE enumFromToV #-}
+{-# INLINE enumFromToS #-}
 
-foldlV :: (Monad m) => (r -> i -> r) -> r -> Stream i m () -> m r
-foldlV g accum0 (Stream f sorig) =
+foldlS :: (Monad m) => (r -> i -> r) -> r -> Stream i m () -> m r
+foldlS g accum0 (Stream f sorig) =
     let loop accum s = do
             step <- f s
             case step of
@@ -81,14 +81,14 @@ foldlV g accum0 (Stream f sorig) =
                     let accum' = g accum i
                      in accum' `seq` loop accum' s'
      in loop accum0 sorig
-{-# INLINE foldlV #-}
+{-# INLINE foldlS #-}
 
-sumV :: (Num i, Monad m) => Stream i m () -> m i
-sumV = foldlV (+) 0
-{-# INLINE sumV #-}
+sumS :: (Num i, Monad m) => Stream i m () -> m i
+sumS = foldlS (+) 0
+{-# INLINE sumS #-}
 
-mapV :: Functor m => (i -> o) -> Stream i m r -> Stream o m r
-mapV f (Stream src sorig) =
+mapS :: Functor m => (i -> o) -> Stream i m r -> Stream o m r
+mapS f (Stream src sorig) =
     let go s = fmap goStep (src s)
 
         goStep (Yield s i) = Yield s (f i)
@@ -96,4 +96,4 @@ mapV f (Stream src sorig) =
         goStep (Done r) = Done r
 
      in Stream go sorig
-{-# INLINE mapV #-}
+{-# INLINE mapS #-}

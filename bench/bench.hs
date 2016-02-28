@@ -12,10 +12,10 @@ main = defaultMain
     [ bgroup "sum $ map (+ 1) $ map (* 2) $ enumFromTo 1 9001"
         [ bench' "vegito" $ \x ->
                   runIdentity
-                $ sumV
-                $ mapV (+ 1)
-                $ mapV (* 2)
-                $ enumFromToV 1 x
+                $ sumS
+                $ mapS (+ 1)
+                $ mapS (* 2)
+                $ enumFromToS 1 x
         , bench' "gotenks" $ \x ->
                   runIdentity
                 $ toSink sumG

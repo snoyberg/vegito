@@ -14,5 +14,5 @@ spec :: Spec
 spec = do
   describe "sanity" $ do
     it "map and sum" $
-      runIdentity (sumV $ mapV (+ 1) $ mapV (* 2) $ enumFromToV 1 9001)
+      runIdentity (sumS $ mapS (+ 1) $ mapS (* 2) $ enumFromToS 1 9001)
         `shouldBe` sum (map (+ 1) $ map (* 2) [1..9001 :: Int])
